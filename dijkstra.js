@@ -57,6 +57,18 @@ class Node {
    * @returns {Node[]}
    */
   calcNeighboursTentativeDistance () {
+    const neverCalculated = []
+    this.paths.forEach((p) => {
+      if (p.node.visited) { return }
+      if (p.node.distance === Infinity) {
+        neverCalculated.push(p.node)
+      }
+      const dist = p.cost + this.distance
+      if (dist >= p.node.distance) { return }
+      p.node.distance = dist
+      p.node.visitedFrom = this
+    })
+    return neverCalculated
   }
 }
 
@@ -69,6 +81,21 @@ class Dijkstra {
    * @returns {Node[]}
    */
   static shortestPathFirst (startNode, endNode) {
+    if (startNode === endNode) return []
+    const nextNodes = []
+    nextNodes.push(startNode)
+    startNode.distance = 0
+
+    while (nextNodes.length) {
+      const curr = nextNodes.shift()
+      curr.visited = true
+      if (curr === endNode) { return this.generatePath(endNode) }
+      const next = curr.calcNeighboursTentativeDistance()
+      nextNodes.push(...next)
+      nextNodes.sort((a, b) => a.distance < b.distance)
+    }
+
+    return []
   }
 
   /**
@@ -79,6 +106,13 @@ class Dijkstra {
    * @returns {Node[]}
    */
   static generatePath (endNode) {
+    const path = []
+    let curr = endNode
+    while (curr) {
+      path.unshift(curr)
+      curr = curr.visitedFrom
+    }
+    return path
   }
 
   /**
